@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-HK"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>陳婆婆的數碼大冒險:改善前後</title>
+<style>
+body{font-family:"Microsoft JhengHei","PingFang HK",sans-serif;margin:0;background:linear-gradient(#ffe9b8,#ffd1d1);color:#222;min-height:100vh}
+#app{max-width:640px;margin:0 auto;padding:14px}
+.card{background:#fff;border-radius:18px;padding:16px;box-shadow:0 4px 12px #0003;margin-bottom:12px}
+button{font-family:inherit;cursor:pointer;border:0;border-radius:12px;background:#e8590c;color:#fff;font-weight:bold}
+button:disabled{opacity:.45}
+.bar{height:14px;background:#eee;border-radius:8px;overflow:hidden}.bar i{display:block;height:100%;transition:width .4s}
+.map{display:flex;gap:4px;margin-bottom:8px}.map span{flex:1;height:10px;border-radius:5px;background:#ddd}.map .on{background:#f59f00}.map .done{background:#2f9e44}
+.bubble{background:#fff8e1;border:2px solid #f59f00;border-radius:16px;padding:10px 12px;margin:8px 0}
+.who{font-size:44px}
+.top{display:flex;justify-content:space-between;font-size:15px;margin-bottom:6px}
+.r1 .q{font-size:12px}.r1 .opt{font-size:10px;padding:3px 5px;margin:2px;background:#868e96}
+.r1 .poster{font-size:9px;color:#555}
+.r2 .q{font-size:23px;line-height:1.5}.r2 .opt{display:block;width:100%;font-size:21px;padding:15px;margin:9px 0;background:#2b8a3e}
+.r2 .poster{font-size:22px}
+.poster{background:#fff3bf;border:2px dashed #e67700;border-radius:10px;padding:10px;margin:8px 0}
+.hint{background:#e7f5ff;border-left:6px solid #1c7ed6;padding:10px;margin-top:10px;font-size:19px;border-radius:8px}
+.tag{display:inline-block;padding:2px 10px;border-radius:12px;background:#ffe8cc;font-size:13px;margin:2px 0}
+.chip{display:inline-block;padding:3px 9px;border-radius:12px;background:#d3f9d8;font-size:12px;margin:2px}
+.big{font-size:18px;padding:12px 20px;margin:4px 0}
+.shake{animation:sh .4s}@keyframes sh{25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+.pop{animation:pp .5s}@keyframes pp{0%{transform:scale(.7)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+.fall{position:fixed;top:-30px;font-size:28px;animation:fl 2.2s linear forwards;pointer-events:none;z-index:9}@keyframes fl{to{transform:translateY(110vh) rotate(360deg)}}
+.badge{display:inline-block;background:#fff3bf;border-radius:12px;padding:8px 12px;margin:4px;font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:#dee2e6;padding:8px;border-radius:12px}
+.r1 .grid{gap:2px;padding:2px;width:150px}.r1 .grid button{font-size:7px;padding:1px;background:#868e96;border-radius:3px;position:relative}
+.r2 .grid button{font-size:20px;padding:20px 4px;background:#1971c2}
+.boss{background:#2b2b3a;color:#fff;border-radius:14px;padding:10px;margin-bottom:8px}
+.sms{background:#f1f3f5;border-radius:12px;padding:10px;margin:8px 0;border-left:6px solid #868e96}
+.pick{display:block;width:100%;text-align:left;background:#f1f3f5;color:#222;font-size:15px;padding:10px;margin:6px 0;border:2px solid #ced4da}
+.pick.ok{background:#d3f9d8;border-color:#2f9e44}.pick.no{background:#ffe3e3;border-color:#e03131}
+table{width:100%;border-collapse:collapse}td,th{border-bottom:1px solid #eee;padding:6px;text-align:center}
+</style></head><body><div id="app"></div>
+<script>
+const D={body:"身體層面",psy:"心理層面",com:"社區層面",eco:"經濟層面"};
+const S=[
+{d:"com",t:"choice",dim:"社區派米",ic:"🍚",flash:1,poster:"📢 社區派米\n日期:今個星期六\n時間:上午10時至12時\n地點:社區中心地下\n請帶身份證及環保袋",q:"派米係幾時、喺邊度?",
+ o:["星期六上午10時,社區中心地下","星期日下午2時,社區中心2樓","星期六上午10時,街市門口","星期五上午9時,地下"],a:0,h:"紙本海報可以慢慢睇;手機畫面可放大字體,再加教練陪睇。"},
+{d:"body",t:"tap",dim:"身體:操作配合",ic:"💊",ctx:"醫管局藥物送遞要核對二維碼。喺 App 入面,㩒「二維碼」掣!",btns:["設定","消息","登出","幫助","二維碼","訂單","語言","私隱","關於"],a:4,h:"教練會陪你逐步㩒,配合大字體圖卡練習。按錯可以返回。"},
+{d:"body",t:"choice",dim:"身體:行動不便",ic:"🏠",ctx:"陳婆婆行動不便,無法親身去中心上手機班,但佢好想學。",q:"點樣幫到佢?",
+ o:["叫佢自己睇網上影片就算","等佢身體好返先再算","經中心現有探訪服務,評估需要,並預約上門指導","叫佢搭車去好遠嘅地方上堂"],a:2,h:"建議:在長者同意下,透過現有探訪網絡,為無法外出的長者預約上門指導。"},
+{d:"psy",t:"boss",dim:"心理:防騙魔王",ic:"👹",sms:"「你的醫療券戶口異常,請即點擊連結更新資料,否則今日凍結!」",q:"呢個短訊係?",
+ o:["⚔️ 騙案!不點擊,致電「防騙易18222」或問職員","✅ 可信,立即點擊"],a:0,h:"停一停、唔點擊、循可靠渠道求證。呢度係模擬情境,冇真實連結。"},
+{d:"psy",t:"boss",dim:"心理:防騙魔王",ic:"👹",sms:"「阿婆,我係你孫,換咗新電話,急需借錢,請即轉帳,唔好話俾爸媽知。」",q:"呢個短訊係?",
+ o:["✅ 可信,即刻轉帳","⚔️ 騙案!先打俾真孫仔/家人確認"],a:1,h:"急借錢+叫你保密係常見騙局。唔好透露密碼或驗證碼,先求證。"},
+{d:"psy",t:"boss",dim:"心理:防騙魔王",ic:"👹",sms:"「提醒:明日活動改為下午2時,如有疑問請致電中心。」(來自你儲存咗的中心號碼,冇連結)",q:"呢個短訊係?",
+ o:["⚔️ 騙案!全部刪除","✅ 可參考,不確定可致電中心確認"],a:1,h:"唔使因為驚騙就乜都唔信。睇有冇連結、轉帳、密碼要求。"},
+{d:"com",t:"choice",dim:"社區:資訊接收",ic:"👥",ctx:"中心改用通訊群組發活動訊息,你只識睇,唔識回覆。你想報名旅行。",q:"你可以點樣報名?",
+ o:["放棄,反正我唔識","致電中心,或去「長者數碼支援站」/「手機診所」學一次","等人幫我報,唔問人","叫陌生人代按"],a:1,h:"建議:支援站同手機診所,加上保留電話熱線。科技擴闊選擇,唔係唯一入場條件。"},
+{d:"com",t:"choice",dim:"社區:朋輩支援",ic:"🧓",ctx:"陳婆婆學識咗傳語音訊息,隔籬鄰居李伯仲未識,佢好想幫手。",q:"中心可以點做?",
+ o:["叫陳婆婆唔好教,怕教錯","推行「以老助老」,培訓長者做數碼導師,並設數碼茶聚","只靠社工一個個教","停止所有數碼班"],a:1,h:"朋輩互相練習、分享,學習同時建立人際關係,減少孤獨感。"},
+{d:"eco",t:"choice",dim:"經濟:通訊費用",ic:"💰",ctx:"你主要打電話、收短訊。電訊店推銷「長者優惠」大流量月費合約,要簽約。",q:"點揀較合適?",
+ o:["見到「長者優惠」就簽","先比較自己真正用量,睇清楚合約及終止費用,必要時問中心嘅精明電訊消費教育","揀最貴,一定最好","唔問條款,先簽再算"],a:1,h:"唔好只睇「長者優惠」四隻字。比較「打電話收短訊」同「經常睇片」嘅不同需要。"},
+{d:"eco",t:"choice",dim:"經濟:設備及數據",ic:"📶",ctx:"陳婆婆部手機壞咗,仲要用晒數據,擔心要喺「上網」同「其他生活開支」之間二揀一。",q:"最合適嘅支援係?",
+ o:["叫佢忍住唔好用","一次性送部手機就夠","申請基層長者數據資助,並可借用設備、獲維修支援","叫佢日日去公共地方 Wi-Fi"],a:2,h:"建議:提供一年數據資助、設備借用及維修,避免因費用中斷使用。"}
+];
+const MEAS=[
+{d:"body",ti:"身體層面:操作同設計唔配合",o:["大字體、大按鈕、延長操作時間及逾時提醒,並提供大字體圖卡、上門指導","只做一個「長者專用App」,取消電話同紙本","所有服務一律只准網上辦理"],a:0,chip:"🔍 大字體+延長時間+上門指導"},
+{d:"psy",ti:"心理層面:怕按錯、怕被騙",o:["叫長者自己睇教學影片,錯咗就罰重做","青年數碼教練陪伴+「三不原則」+模擬防騙練習","加強責備按錯嘅人,令佢哋更加小心"],a:1,chip:"🧑‍🏫 青年數碼教練+三不原則"},
+{d:"com",ti:"社區層面:支援同人際連結",o:["全部報名改為網上,唔再接電話","只靠家人教導,中心唔需要做嘢","長者數碼支援站、手機診所、以老助老,並保留電話及面對面服務"],a:2,chip:"🏠 數碼支援站+以老助老"},
+{d:"eco",ti:"經濟層面:費用同設備負擔",o:["鼓勵簽長約換優惠","一次性送手機就足夠","數據資助、設備借用及維修,加上精明電訊消費教育"],a:2,chip:"💰 數據資助+精明電訊消費"}
+];
+const MAX=S.length*3;
+const mx={};S.forEach(s=>mx[s.d]=(mx[s.d]||0)+3);
+const app=document.getElementById("app");
+let round=1,i=0,st,timer,left,tries,combo,coins,bossHp,AC,midx=0,jt;
+function reset(){const z=()=>({score:0,wrong:0,timeout:0,hints:0,coins:0,best:0,dim:{body:0,psy:0,com:0,eco:0}});st={1:z(),2:z()}}reset();
+function snd(f,d,ty){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type=ty||"sine";o.frequency.value=f;g.gain.value=.08;o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}}
+function good(){snd(660,.12);setTimeout(()=>snd(880,.18),120)}
+function bad(){snd(180,.3,"sawtooth");if(navigator.vibrate)navigator.vibrate(200)}
+function party(e){for(let k=0;k<22;k++){const d=document.createElement("div");d.className="fall";d.textContent=e[k%e.length];d.style.left=Math.random()*95+"vw";d.style.animationDelay=Math.random()*.8+"s";document.body.appendChild(d);setTimeout(()=>d.remove(),3200)}}
+function intro(){app.innerHTML=`<div class="card pop"><div class="who">👵🏻📱</div><h2>陳婆婆的數碼大冒險</h2>
+<p><b>香港基層長者與數碼鴻溝:改善前後體驗</b><br>開心關懷長者日間中心 · 小組匯報互動遊戲</p>
+<p>陳婆婆住公屋,有部智能手機,但好多嘢都「唔敢㩒」。佢面對四個層面嘅困難:<br>🔍 身體 ・ 🧠 心理 ・ 🏠 社區 ・ 💰 經濟</p>
+<div class="bubble">🔴 <b>第一步:現況</b>—字細、掣細、時間緊、冇人幫手。<br>🛠️ <b>第二步:你做政策顧問</b>—揀出我哋小組建議嘅改善方案。<br>🟢 <b>第三步:改善後</b>—同一批任務,睇下陳婆婆有咩改變。</div>
+<p style="font-size:12px;color:#666">教學模擬遊戲,不收集個人資料。人物及情境為虛構,內容按小組匯報建議設計。建議開聲音。</p>
+<button class="big" onclick="startRound(1)">▶ 開始(現況)</button></div>`}
+function startRound(r){round=r;i=0;combo=0;coins=0;bossHp=3;scene()}
+function mapHtml(){return `<div class="map">${S.map((_,k)=>`<span class="${k<i?'done':k==i?'on':''}"></span>`).join("")}</div>`}
+function topHtml(){return `<div class="top"><span>🪙 ${coins}</span><span>🔥 連擊 ${combo}</span><span>⭐ ${st[round].score}</span></div>`}
+function scene(){clearInterval(timer);clearInterval(jt);tries=0;
+ if(i>=S.length)return round==1?between():end();
+ const s=S[i],r=round;left=r==1?(s.t=="tap"?10:14):45;const total=left;
+ let body="";
+ if(s.poster)body+=`<div class="poster" id="ps">${s.poster.replace(/\n/g,"<br>")}</div>`;
+ if(s.ctx)body+=`<p class="q">${s.ctx}</p>`;
+ if(s.t=="boss")body+=`<div class="boss">👹 騙徒大魔王 HP ${"❤️".repeat(bossHp)}${"🖤".repeat(3-bossHp)}</div><div class="sms q">📩 ${s.sms}</div>`;
+ if(s.q)body+=`<p class="q"><b>${s.q}</b></p>`;
+ body+=s.t=="tap"?`<div class="grid" id="g"></div>`:`<div id="opts"></div>`;
+ const chips=r==2?`<div>${MEAS.map(m=>`<span class="chip">${m.chip}</span>`).join("")}</div>`:"";
+ app.innerHTML=`<div class="${r==1?'r1':'r2'}"><div class="card">${mapHtml()}${topHtml()}
+ <span class="tag">${r==1?"🔴 現況":"🟢 改善後"}</span> <span class="tag">${s.ic} ${s.dim}</span>${chips}
+ <div class="bar" style="margin:8px 0"><i id="tb" style="width:100%;background:${r==1?'#e03131':'#2f9e44'}"></i></div>
+ <div id="tt" style="font-size:${r==1?12:18}px">⏱ ${left} 秒</div>
+ <div class="who">${r==1?"👵🏻😰":"👵🏻😊"}</div>${body}<div id="fb"></div>
+ ${r==2?'<button class="big" onclick="hint()">🧑‍🏫 問數碼教練</button> <button class="big" style="background:#495057" onclick="left+=30">⏱ 要多啲時間</button>':''}
+ </div></div>`;
+ if(s.flash&&r==1)setTimeout(()=>{const p=document.getElementById("ps");if(p)p.innerHTML="🫥 海報消失咗…(手機畫面自動轉走,你記唔記得?)"},5000);
+ if(s.t=="tap"){const g=document.getElementById("g");s.btns.forEach((t,k)=>{const b=document.createElement("button");b.textContent=t;b.onclick=()=>pick(k,b);g.appendChild(b)});
+  if(r==1){jt=setInterval(()=>{const g=document.getElementById("g");if(!g)return;[...g.children].forEach(b=>{b.style.left=(Math.random()*8-4)+"px";b.style.top=(Math.random()*8-4)+"px"})},180)}}
+ else{const o=document.getElementById("opts");s.o.map((t,k)=>[t,k]).sort(()=>Math.random()-.5).forEach(([t,k])=>{const b=document.createElement("button");b.className="opt";b.textContent=t;b.onclick=()=>pick(k,b);o.appendChild(b)})}
+ timer=setInterval(()=>{left--;document.getElementById("tb").style.width=Math.max(0,left/total*100)+"%";
+  document.getElementById("tt").textContent="⏱ "+Math.max(left,0)+" 秒"+(r==2&&left<=10&&left>0?" 👉 可以按「要多啲時間」":"");
+  if(left<=0){clearInterval(timer);st[r].timeout++;st[r].wrong++;combo=0;shake();bad();fb("⌛ 時間到!畫面重設,陳婆婆話:「我係咪好笨…」")}},1000)}
+function shake(){const c=document.querySelector(".card");c.classList.remove("shake");void c.offsetWidth;c.classList.add("shake")}
+function hint(){st[round].hints++;document.get
